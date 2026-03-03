@@ -1,18 +1,45 @@
-import { View, Text, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useGoalsStore } from '@/stores/goals.store';
+import { useWalletsStore } from '@/stores/wallets.store';
 import { GoalCard } from '@/components/GoalCard';
 import * as icons from 'lucide-react-native';
 
 export default function GoalsScreen() {
     const router = useRouter();
     const { goals, isLoading, fetchGoals, addProgress } = useGoalsStore();
+    const { wallets, fetchWallets } = useWalletsStore();
+
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+    const [amount, setAmount] = useState('');
+    const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         fetchGoals();
+        fetchWallets();
     }, []);
+
+    const openContributionModal = (goalId: string) => {
+        setSelectedGoalId(goalId);
+        setAmount('');
+        if (wallets.length > 0) setSelectedWalletId(wallets[0].id);
+        setIsModalVisible(true);
+    };
+
+    const handleContribute = async () => {
+        if (!selectedGoalId || !amount || isNaN(Number(amount))) {
+            return Alert.alert('Error', 'Ingresa un monto válido.');
+        }
+
+        setIsSubmitting(true);
+        await addProgress(selectedGoalId, Number(amount));
+        setIsSubmitting(false);
+        setIsModalVisible(false);
+    };
 
     const activeGoals = goals.filter(g => g.status === 'active');
     const completedGoals = goals.filter(g => g.status === 'completed');
@@ -67,7 +94,7 @@ export default function GoalsScreen() {
                             <GoalCard
                                 key={goal.id}
                                 goal={goal}
-                                onAdd={() => addProgress(goal.id, 100)}
+                                onAdd={openContributionModal}
                             />
                         ))}
                     </View>
@@ -89,6 +116,64 @@ export default function GoalsScreen() {
 
                 <View className="h-24" />
             </ScrollView>
+
+            {/* Modal para aportar */}
+            <Modal visible={isModalVisible} animationType="slide" transparent>
+                <View className="flex-1 bg-black/60 justify-end">
+                    <View className="bg-zinc-900 rounded-t-3xl p-6 border-t border-zinc-800">
+                        <View className="flex-row justify-between items-center mb-6">
+                            <Text className="text-white text-xl font-bold">Aportar a Meta</Text>
+                            <TouchableOpacity onPress={() => setIsModalVisible(false)} className="w-8 h-8 bg-zinc-800 rounded-full items-center justify-center">
+                                <icons.X size={18} color="#a1a1aa" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <Text className="text-zinc-400 text-xs font-semibold mb-2">Monto a agregar</Text>
+                        <View className="bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 mb-6">
+                            <TextInput
+                                className="text-white text-base"
+                                placeholder="0.00"
+                                placeholderTextColor="#52525b"
+                                keyboardType="decimal-pad"
+                                value={amount}
+                                onChangeText={setAmount}
+                                autoFocus
+                            />
+                        </View>
+
+                        {wallets.length > 0 && (
+                            <>
+                                <Text className="text-zinc-400 text-xs font-semibold mb-2">Desde billetera (Opcional)</Text>
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-6 h-12">
+                                    {wallets.map(w => (
+                                        <TouchableOpacity
+                                            key={w.id}
+                                            onPress={() => setSelectedWalletId(w.id)}
+                                            className={`px-4 py-3 rounded-xl border mr-3 ${selectedWalletId === w.id ? 'bg-indigo-600/20 border-indigo-500/50' : 'bg-zinc-950 border-zinc-800'}`}
+                                        >
+                                            <Text className={selectedWalletId === w.id ? 'text-indigo-400 font-bold' : 'text-zinc-400'}>{w.name}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </ScrollView>
+                            </>
+                        )}
+
+                        <TouchableOpacity
+                            className={`w-full py-4 rounded-xl items-center ${isSubmitting ? 'bg-indigo-600/50' : 'bg-indigo-600'}`}
+                            onPress={handleContribute}
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <Text className="text-white font-bold text-base">Hacer aporte</Text>
+                            )}
+                        </TouchableOpacity>
+
+                        <View className="h-6" />
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }

@@ -1,5 +1,6 @@
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { CategoryIcon } from './CategoryIcon';
+import * as icons from 'lucide-react-native';
 
 export interface Transaction {
     id: string;
@@ -9,6 +10,8 @@ export interface Transaction {
     date: string;
     icon?: string;
     original_currency?: 'NIO' | 'USD';
+    category_id?: string;
+    merchant_name?: string;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -31,7 +34,13 @@ function getCategoryColor(category: string): string {
     return CATEGORY_COLORS[category] || '#818cf8';
 }
 
-export function TransactionCard({ transaction }: { transaction: Transaction }) {
+interface TransactionProps {
+    transaction: Transaction;
+    onEdit?: () => void;
+    onDelete?: (id: string) => void;
+}
+
+export function TransactionCard({ transaction, onEdit, onDelete }: TransactionProps) {
     const isExpense = transaction.amount < 0;
     const bgColor = getCategoryColor(transaction.category);
 
@@ -51,12 +60,25 @@ export function TransactionCard({ transaction }: { transaction: Transaction }) {
                 <Text className="text-zinc-500 text-xs mt-0.5">{transaction.category}</Text>
             </View>
 
-            {/* Amount + Date */}
+            {/* Amount + Actions */}
             <View className="items-end">
                 <Text className={`font-bold text-[15px] ${isExpense ? 'text-white' : 'text-emerald-400'}`}>
                     {isExpense ? '-' : '+'}{transaction.original_currency === 'USD' ? '$' : 'C$'}{Math.abs(transaction.amount).toFixed(2)}
                 </Text>
-                <Text className="text-zinc-600 text-[10px] mt-0.5">{transaction.date}</Text>
+
+                <View className="flex-row items-center mt-1.5 space-x-2">
+                    <Text className="text-zinc-600 text-[10px] mr-2">{transaction.date}</Text>
+                    {onEdit && (
+                        <TouchableOpacity onPress={onEdit} className="p-1 items-center justify-center bg-zinc-800/50 rounded-lg">
+                            <icons.Pencil size={12} color="#a1a1aa" />
+                        </TouchableOpacity>
+                    )}
+                    {onDelete && (
+                        <TouchableOpacity onPress={() => onDelete(transaction.id)} className="p-1 items-center justify-center bg-red-500/10 rounded-lg ml-1">
+                            <icons.Trash2 size={12} color="#f87171" />
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
         </View>
     );

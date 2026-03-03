@@ -1,7 +1,8 @@
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Switch } from 'react-native';
 import { supabase } from '@/services/supabase';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/stores/auth.store';
+import { useBusinessStore } from '@/stores/business.store';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as icons from 'lucide-react-native';
 
@@ -26,6 +27,8 @@ function MenuItem({ icon: Icon, label, onPress, color = '#818cf8', danger = fals
 export default function ProfileScreen() {
     const router = useRouter();
     const { user } = useAuthStore();
+    const { isBusinessModeActive, setBusinessModeActive } = useBusinessStore();
+
     const name = user?.user_metadata?.name || 'Usuario';
     const email = user?.email || '';
     const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
@@ -44,8 +47,34 @@ export default function ProfileScreen() {
                     {email ? <Text className="text-zinc-500 text-sm mt-0.5">{email}</Text> : null}
                 </View>
 
+                {/* Configuración de Entorno */}
+                <Text className="text-zinc-400 font-bold text-xs uppercase mb-2 ml-2">Entorno</Text>
+                <View className="bg-zinc-900/50 rounded-2xl px-4 py-4 border border-zinc-800/50 mb-6 flex-row items-center justify-between">
+                    <View className="flex-row items-center flex-1">
+                        <View className="w-10 h-10 rounded-xl items-center justify-center mr-3 bg-emerald-500/10">
+                            <icons.Briefcase size={18} color="#34d399" />
+                        </View>
+                        <View className="flex-1">
+                            <Text className="font-medium text-[15px] text-white">Modo Emprendedor</Text>
+                            <Text className="text-zinc-500 text-xs">Activa la sección para tu negocio</Text>
+                        </View>
+                    </View>
+                    <Switch
+                        value={isBusinessModeActive}
+                        onValueChange={setBusinessModeActive}
+                        trackColor={{ false: '#3f3f46', true: '#34d399' }}
+                        thumbColor="#fff"
+                    />
+                </View>
+
                 {/* Menu */}
+                <Text className="text-zinc-400 font-bold text-xs uppercase mb-2 ml-2">General</Text>
                 <View className="bg-zinc-900/50 rounded-2xl px-4 border border-zinc-800/50 mb-6">
+                    <MenuItem
+                        icon={icons.Wallet}
+                        label="Mis Billeteras"
+                        onPress={() => router.push('/manage-wallets' as any)}
+                    />
                     <MenuItem
                         icon={icons.LayoutGrid}
                         label="Mis Categorías"

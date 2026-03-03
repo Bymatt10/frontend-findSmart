@@ -7,27 +7,42 @@ import { supabase } from '@/services/supabase';
 import { useDashboardStore } from '@/stores/dashboard.store';
 import { useCategoriesStore } from '@/stores/categories.store';
 import { useCurrencyStore } from '@/stores/currency.store';
+import { useWalletsStore } from '@/stores/wallets.store';
 import { apiClient } from '@/services/api';
 import { CategoryIcon } from '@/components/CategoryIcon';
+import * as icons from 'lucide-react-native';
 
 export default function AddTransactionScreen() {
     const router = useRouter();
     const { fetchDashboardData } = useDashboardStore();
     const { categories, fetchCategories } = useCategoriesStore();
     const { currentRate, fetchRate } = useCurrencyStore();
+    const { wallets, fetchWallets } = useWalletsStore();
 
     const [amount, setAmount] = useState('');
     const [currency, setCurrency] = useState<'NIO' | 'USD'>('NIO');
     const [merchant, setMerchant] = useState('');
     const [description, setDescription] = useState('');
     const [categoryId, setCategoryId] = useState('');
+    const [walletId, setWalletId] = useState<string | null>(null);
     const [isExpense, setIsExpense] = useState(true);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         fetchCategories();
         fetchRate();
+        fetchWallets().then(() => {
+            // No podemos saber el estado exacto aquí sin depender de 'wallets' de la tienda después del fetch.
+            // Para simplificar, confiaremos en un useEffect adjunto.
+        });
     }, []);
+
+    useEffect(() => {
+        if (wallets.length > 0 && !walletId) {
+            setWalletId(wallets[0].id);
+            setCurrency(wallets[0].currency as any);
+        }
+    }, [wallets]);
 
     async function handleSave() {
         if (!amount || !merchant) {
@@ -45,6 +60,7 @@ export default function AddTransactionScreen() {
                 merchant_name: merchant,
                 description: description,
                 category_id: categoryId || undefined,
+                wallet_id: walletId || undefined,
                 date: new Date().toISOString(),
                 source: 'manual'
             });
@@ -108,9 +124,35 @@ export default function AddTransactionScreen() {
                     />
                 </View>
 
-                <View className="mb-8">
-                    <Text className="text-zinc-500 text-sm">~ {eqSymbol}{equivalent} <Text className="text-zinc-700">(Tasa BCN: {currentRate || 'N/A'})</Text></Text>
+                <View className="mb-6">
+                    <Text className="text-zinc-500 text-sm font-medium">~ {eqSymbol}{equivalent} <Text className="text-zinc-700">(Tasa BCN: {currentRate || 'N/A'})</Text></Text>
                 </View>
+
+                {wallets.length > 0 && (
+                    <View className="mb-8">
+                        <Text className="text-zinc-400 font-medium mb-2 uppercase text-xs tracking-wider">Cuenta o Tarjeta de Pago</Text>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                            {wallets.map(w => {
+                                const isSelected = walletId === w.id;
+                                return (
+                                    <TouchableOpacity
+                                        key={w.id}
+                                        onPress={() => {
+                                            setWalletId(w.id);
+                                            setCurrency(w.currency as any);
+                                        }}
+                                        className={`mr-3 py-3 px-4 rounded-2xl flex-row items-center border ${isSelected ? 'border-indigo-500 bg-indigo-600/20' : 'border-zinc-800 bg-zinc-900'}`}
+                                    >
+                                        <View className="mr-2">
+                                            {w.type === 'credit_card' ? <icons.CreditCard size={18} color={isSelected ? "#818cf8" : "#a1a1aa"} /> : <icons.Landmark size={18} color={isSelected ? "#818cf8" : "#a1a1aa"} />}
+                                        </View>
+                                        <Text className={`font-semibold ${isSelected ? 'text-indigo-300' : 'text-zinc-400'}`}>{w.bank_name || 'Efectivo'} - {w.name}</Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </ScrollView>
+                    </View>
+                )}
 
                 {/* Inputs */}
                 <Text className="text-zinc-400 font-medium mb-2 uppercase text-xs tracking-wider">Comercio / Origen</Text>

@@ -9,9 +9,10 @@ interface DashboardState {
     totalExpenses: number;
     totalIncome: number;
     fetchDashboardData: (month?: number, year?: number) => Promise<void>;
+    deleteTransaction: (id: string) => Promise<void>;
 }
 
-export const useDashboardStore = create<DashboardState>((set) => ({
+export const useDashboardStore = create<DashboardState>((set, get) => ({
     transactions: [],
     isLoading: false,
     totalBalance: 0,
@@ -42,6 +43,8 @@ export const useDashboardStore = create<DashboardState>((set) => ({
                 date: new Date(t.date).toLocaleDateString(),
                 icon: t.categories?.icon || 'MapPin',
                 original_currency: t.original_currency,
+                category_id: t.categories?.id,
+                merchant_name: t.merchant_name
             }));
 
             set({
@@ -54,6 +57,17 @@ export const useDashboardStore = create<DashboardState>((set) => ({
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
             set({ isLoading: false });
+        }
+    },
+
+    deleteTransaction: async (id: string) => {
+        try {
+            await apiClient.delete(`/transactions/${id}`);
+            // Recargar datos optimista
+            get().fetchDashboardData();
+        } catch (error) {
+            console.error('Error deleting transaction:', error);
+            throw error;
         }
     }
 }));

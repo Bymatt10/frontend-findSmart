@@ -13,7 +13,7 @@ const GOAL_ICONS: Record<string, any> = {
     shield: icons.Shield,
 };
 
-export function GoalCard({ goal, onAdd }: { goal: Goal, onAdd: () => void }) {
+export function GoalCard({ goal, onAdd }: { goal: Goal, onAdd: (id: string) => void }) {
     const progress = Math.min((goal.current_amount / goal.target_amount) * 100, 100);
     const isCompleted = goal.status === 'completed';
     const IconComp = GOAL_ICONS.default;
@@ -61,7 +61,7 @@ export function GoalCard({ goal, onAdd }: { goal: Goal, onAdd: () => void }) {
             {!isCompleted && (
                 <TouchableOpacity
                     className="mt-3 w-full bg-indigo-600/15 border border-indigo-500/30 py-3 rounded-2xl items-center active:bg-indigo-600/25"
-                    onPress={onAdd}
+                    onPress={() => onAdd(goal.id)}
                 >
                     <Text className="text-indigo-400 font-semibold text-sm">+ Aportar</Text>
                 </TouchableOpacity>

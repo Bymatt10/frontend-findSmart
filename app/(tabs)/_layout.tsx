@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { View } from 'react-native';
 import * as icons from 'lucide-react-native';
+import { useBusinessStore } from '@/stores/business.store';
 
 function TabIcon({
   focused,
@@ -20,6 +21,8 @@ function TabIcon({
 }
 
 export default function TabLayout() {
+  const { isBusinessModeActive } = useBusinessStore();
+
   return (
     <Tabs
       screenOptions={{
@@ -45,8 +48,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Inicio',
-          tabBarIcon: ({ focused }) => <TabIcon Icon={icons.Home} focused={focused} />,
+          title: isBusinessModeActive ? 'Mi Negocio' : 'Inicio',
+          tabBarIcon: ({ focused }) => <TabIcon Icon={isBusinessModeActive ? icons.Briefcase : icons.Home} focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -75,12 +78,6 @@ export default function TabLayout() {
         options={{
           title: 'Perfil',
           tabBarIcon: ({ focused }) => <TabIcon Icon={icons.User} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          href: null,
         }}
       />
     </Tabs>

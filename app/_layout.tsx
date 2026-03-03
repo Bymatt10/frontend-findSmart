@@ -56,8 +56,13 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         <Stack.Screen name="add-transaction" options={{ presentation: 'modal', title: 'Nuevo Gasto' }} />
+        <Stack.Screen name="edit-transaction" options={{ presentation: 'modal', title: 'Editar Gasto' }} />
         <Stack.Screen name="add-category" options={{ presentation: 'modal', title: 'Nueva Categoría' }} />
         <Stack.Screen name="add-goal" options={{ presentation: 'modal', title: 'Nueva Meta' }} />
+        <Stack.Screen name="manage-wallets" options={{ presentation: 'modal', title: 'Mis Billeteras' }} />
+        <Stack.Screen name="add-business-transaction" options={{ presentation: 'modal', title: 'Registrar Producto' }} />
+        <Stack.Screen name="sell-business-transaction" options={{ presentation: 'modal', title: 'Vender Producto' }} />
+        <Stack.Screen name="edit-business-transaction" options={{ presentation: 'modal', title: 'Editar Producto' }} />
         <Stack.Screen name="chat" options={{ presentation: 'modal', title: 'Coach Financiero' }} />
       </Stack>
       <StatusBar style="auto" />
