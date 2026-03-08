@@ -6,6 +6,12 @@ node_modules/
 dist/
 web-build/
 
+#android
+android/
+
+#ios
+ios/
+
 # Environment
 .env
 .env.local
